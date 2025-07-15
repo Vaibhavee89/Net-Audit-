@@ -1,0 +1,7 @@
+ip,state,mac,vendor,hostname,os,trusted
+192.168.31.1,up,98:87:4C:D2:34:55,,jiofiber.local.html,OpenWrt 21.02 (Linux 5.4),False
+192.168.31.169,up,DA:65:DF:38:DB:EC,,Redmi-Note-12-5G.lan,Unknown,False
+192.168.31.195,up,Not found,Unknown,Vaibhavee.lan,Microsoft Windows 10 1607 - 11 23H2,False
+192.168.31.225,up,14:07:08:33:B4:6E,Private,,Google Home device,False
+192.168.31.24,up,EA:8F:71:12:75:97,,sanjeev-s-A55.lan,Unknown,False
+192.168.31.95,up,3C:55:DB:F2:1B:A3,,SetTopBox-0174.lan,Android 9 - 10 (Linux 4.9 - 4.14),False
