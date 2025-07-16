@@ -119,6 +119,19 @@ def phase10():
 @app.route('/phase11')
 def phase11():
     return jsonify({"phase": 11, "name": "Automation & Re-Auditing", "status": "Placeholder endpoint"})
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            return "Email address already exists" # Or render a template with an error message
+        new_user = User(email=email, password=password) # We will add password hashing later
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('signup.html')
 
 if __name__ == '__main__':
     if not os.path.exists('site.db'):
