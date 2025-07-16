@@ -119,20 +119,18 @@ def phase10():
 @app.route('/phase11')
 def phase11():
     return jsonify({"phase": 11, "name": "Automation & Re-Auditing", "status": "Placeholder endpoint"})
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
+@app.route('/login', methods=['GET', 'POST'])
+def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
-        if user:
-            return "Email address already exists" # Or render a template with an error message
-        hashed_password = generate_password_hash(password)
-        new_user = User(email=email, password_hash=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('signup.html')
+        if user and check_password_hash(user.password_hash, password):
+            # Log the user in (we'll implement this properly with Flask-Login next)
+            return "Login successful (Placeholder)" # Or redirect to a protected page
+        else:
+            return "Invalid email or password" # Or render a template with an error message
+    return render_template('login.html')
 
 if __name__ == '__main__':
     if not os.path.exists('site.db'):
