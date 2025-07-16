@@ -1,11 +1,18 @@
+from main import app, db
+with app.app_context():
+    db.create_all()
 import nmap
 import csv
 import json
 from datetime import datetime
 from manuf import manuf  # For MAC vendor lookup
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template, request
+from flask_sqlalchemy import SQLAlchemy
+import os
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+db = SQLAlchemy(app)
 
 @app.route('/')
 def home():
@@ -55,5 +62,27 @@ def phase10():
 def phase11():
     return jsonify({"phase": 11, "name": "Automation & Re-Auditing", "status": "Placeholder endpoint"})
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Handle login logic here (e.g., check credentials)
+        return "Login POST request received (Placeholder)" # TODO: Implement actual login logic
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        # Handle signup logic here (e.g., create new user)
+        return "Signup POST request received (Placeholder)" # TODO: Implement actual signup logic
+    return render_template('signup.html')
+
 if __name__ == '__main__':
+    if not os.path.exists('site.db'):
+        with app.app_context():
+            db.create_all()
     app.run(debug=True)
