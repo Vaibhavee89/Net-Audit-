@@ -1,4 +1,3 @@
-
 import nmap
 import csv
 import json
@@ -50,19 +49,18 @@ def signup():
         return redirect(url_for('login'))
     return render_template('signup.html')
 
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('home')) # Redirect to home page or a protected page
-        else:
-            return "Invalid email or password" # Or render a template with an error message
-    return render_template('login.html')
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         email = request.form.get('email')
+#         password = request.form.get('password')
+#         user = User.query.filter_by(email=email).first()
+#         if user and check_password_hash(user.password_hash, password):
+#             # Log the user in (we'll implement this properly with Flask-Login next)
+#             return "Login successful (Placeholder)" # Or redirect to a protected page
+#         else:
+#             return "Invalid email or password" # Or render a template with an error message
+#     return render_template('login.html')
 
 
 @app.route('/logout')
@@ -138,7 +136,7 @@ def login():
     return render_template('login.html')
 
 if __name__ == '__main__':
-    if not os.path.exists('site.db'):
+    if not os.path.exists('network_audit.db'):
         with app.app_context():
             db.create_all()
     app.run(debug=True)
