@@ -21,9 +21,8 @@ login_manager.login_view = 'login'
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(1000), nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -31,46 +30,52 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    if not username or not password:
-        return jsonify({'error': 'Username and password required'}), 400
-    if User.query.filter_by(username=username).first():
-        return jsonify({'error': 'Username already exists'}), 400
-    user = User(username=username)
-    user.set_password(password)
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({'message': 'User registered successfully'})
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            return "Email address already exists" # Or render a template with an error message
+        new_user = User(email=email)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('signup.html')
 
-@app.route('/login', methods=['POST'])
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    user = User.query.filter_by(username=username).first()
-    if user and user.check_password(password):
-        login_user(user)
-        return jsonify({'message': 'Logged in successfully'})
-    return jsonify({'error': 'Invalid credentials'}), 401
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('home')) # Redirect to home page or a protected page
+        else:
+            return "Invalid email or password" # Or render a template with an error message
+    return render_template('login.html')
+
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return jsonify({'message': 'Logged out successfully'})
+    return redirect(url_for('home')) # Redirect to home page or login page
 
 @app.route('/protected')
 @login_required
-def protected():
-    return jsonify({'message': f'Hello, {current_user.username}! This is a protected endpoint.'})
+def protected_route():
+    return "This is a protected route!"
+
 
 @app.route('/')
 def home():
