@@ -127,7 +127,8 @@ def signup():
         user = User.query.filter_by(email=email).first()
         if user:
             return "Email address already exists" # Or render a template with an error message
-        new_user = User(email=email, password=password) # We will add password hashing later
+        hashed_password = generate_password_hash(password)
+        new_user = User(email=email, password_hash=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
