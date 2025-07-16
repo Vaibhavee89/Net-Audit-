@@ -276,7 +276,7 @@ function LandingPage() {
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <h2 className="text-4xl font-bold text-white mb-6">Ready for Python Integration</h2>
             <p className="text-xl text-gray-300 mb-8">
-              Built with seamless Python integration in mind. Connect your existing security tools, 
+              Connect your existing security tools, 
               automation scripts, and monitoring systems for a complete security operations platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -308,7 +308,7 @@ function LandingPage() {
               </div>
               <p className="text-gray-400 mb-4 max-w-md">
                 Enterprise-grade network security auditing platform with comprehensive 14-phase methodology 
-                and Python integration capabilities.
+                and integration capabilities.
               </p>
             </div>
             <div>
@@ -332,7 +332,7 @@ function LandingPage() {
           </div>
           <div className="border-t border-white/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm">
-              © 2025 NetworkAudit Pro. All rights reserved.
+              © 2025 Net-Audit Pro. All rights reserved.
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Privacy</a>
