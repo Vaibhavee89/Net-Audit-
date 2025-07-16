@@ -1,87 +1,88 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import axios from 'axios'
 
-const AuthContext = createContext();
+const AuthContext = createContext()
 
 export function useAuth() {
-  return useContext(AuthContext);
+  return useContext(AuthContext)
 }
 
+// Configure axios defaults for Python Flask integration
+axios.defaults.baseURL = '/api'
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is logged in on app start
-    const token = localStorage.getItem('token');
-    if (token) {
-      // In a real app, you'd verify the token with the backend
-      setUser({ token });
+    const token = localStorage.getItem('networkaudit_token')
+    const userData = localStorage.getItem('networkaudit_user')
+    
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData))
+      } catch (error) {
+        localStorage.removeItem('networkaudit_token')
+        localStorage.removeItem('networkaudit_user')
+      }
     }
-    setLoading(false);
-  }, []);
+    setLoading(false)
+  }, [])
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/login', {
-        email,
-        password
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        transformRequest: [(data) => {
-          return Object.keys(data)
-            .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
-            .join('&');
-        }]
-      });
+      const formData = new URLSearchParams()
+      formData.append('email', email)
+      formData.append('password', password)
 
-      if (response.data.includes('Login successful') || response.status === 200) {
-        const userData = { email, token: 'mock-token' };
-        setUser(userData);
-        localStorage.setItem('token', 'mock-token');
-        localStorage.setItem('user', JSON.stringify(userData));
-        return { success: true };
-      } else {
-        return { success: false, error: 'Invalid credentials' };
+      const response = await axios.post('/login', formData)
+      
+      if (response.status === 200) {
+        const userData = { email, token: 'authenticated' }
+        setUser(userData)
+        localStorage.setItem('networkaudit_token', 'authenticated')
+        localStorage.setItem('networkaudit_user', JSON.stringify(userData))
+        return { success: true }
       }
     } catch (error) {
-      return { success: false, error: error.response?.data || 'Login failed' };
+      return { 
+        success: false, 
+        error: error.response?.data || 'Login failed. Please check your credentials.' 
+      }
     }
-  };
+  }
 
   const signup = async (email, password) => {
     try {
-      const response = await axios.post('/signup', {
-        email,
-        password
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        transformRequest: [(data) => {
-          return Object.keys(data)
-            .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`)
-            .join('&');
-        }]
-      });
+      const formData = new URLSearchParams()
+      formData.append('email', email)
+      formData.append('password', password)
 
-      if (response.status === 200 || response.request.responseURL.includes('/login')) {
-        return { success: true };
-      } else {
-        return { success: false, error: 'Signup failed' };
+      const response = await axios.post('/signup', formData)
+      
+      if (response.status === 200) {
+        return { success: true }
       }
     } catch (error) {
-      return { success: false, error: error.response?.data || 'Signup failed' };
+      return { 
+        success: false, 
+        error: error.response?.data || 'Signup failed. Please try again.' 
+      }
     }
-  };
+  }
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  };
+  const logout = async () => {
+    try {
+      await axios.get('/logout')
+    } catch (error) {
+      console.log('Logout error:', error)
+    } finally {
+      setUser(null)
+      localStorage.removeItem('networkaudit_token')
+      localStorage.removeItem('networkaudit_user')
+    }
+  }
 
   const value = {
     user,
@@ -89,11 +90,11 @@ export function AuthProvider({ children }) {
     signup,
     logout,
     loading
-  };
+  }
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
+  )
 }

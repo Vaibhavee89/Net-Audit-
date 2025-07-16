@@ -1,83 +1,85 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Shield, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { Shield, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
 
 function SignupPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signup } = useAuth()
+  const navigate = useNavigate()
 
   const validatePassword = (password) => {
-    const minLength = password.length >= 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
+    const minLength = password.length >= 8
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumbers = /\d/.test(password)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
     
     return {
       minLength,
       hasUpperCase,
       hasLowerCase,
       hasNumbers,
+      hasSpecialChar,
       isValid: minLength && hasUpperCase && hasLowerCase && hasNumbers
-    };
-  };
+    }
+  }
 
-  const passwordValidation = validatePassword(password);
+  const passwordValidation = validatePassword(password)
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault()
+    setError('')
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+      setError('Passwords do not match')
+      return
     }
 
     if (!passwordValidation.isValid) {
-      setError('Password does not meet requirements');
-      return;
+      setError('Password does not meet security requirements')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
-    const result = await signup(email, password);
+    const result = await signup(email, password)
     
     if (result.success) {
       navigate('/login', { 
-        state: { message: 'Account created successfully! Please sign in.' }
-      });
+        state: { message: 'Account created successfully! Please sign in to access your dashboard.' }
+      })
     } else {
-      setError(result.error || 'Signup failed. Please try again.');
+      setError(result.error || 'Account creation failed. Please try again.')
     }
     
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-            <Shield className="w-8 h-8 text-blue-400" />
+          <Link to="/" className="inline-flex items-center space-x-2 mb-6 group">
+            <Shield className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform duration-200" />
             <span className="text-2xl font-bold text-white">NetworkAudit Pro</span>
           </Link>
-          <h2 className="text-3xl font-bold text-white mb-2">Create your account</h2>
+          <h2 className="text-3xl font-bold text-white mb-2">Create Your Account</h2>
           <p className="text-gray-300">Start securing your network infrastructure today</p>
         </div>
 
         {/* Signup Form */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20">
+        <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20 shadow-2xl">
           {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-400" />
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center space-x-2 animate-fade-in">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
               <span className="text-red-300 text-sm">{error}</span>
             </div>
           )}
@@ -114,7 +116,7 @@ function SignupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Create a password"
+                  placeholder="Create a secure password"
                 />
                 <button
                   type="button"
@@ -127,7 +129,7 @@ function SignupPage() {
               
               {/* Password Requirements */}
               {password && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-3 p-3 bg-white/5 rounded-lg border border-white/10">
                   <div className="text-xs text-gray-400 mb-2">Password requirements:</div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className={`flex items-center space-x-1 ${passwordValidation.minLength ? 'text-green-400' : 'text-gray-400'}`}>
@@ -175,14 +177,17 @@ function SignupPage() {
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-2 text-xs text-red-400">Passwords do not match</p>
+                <p className="mt-2 text-xs text-red-400 flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Passwords do not match</span>
+                </p>
               )}
             </div>
 
             <button
               type="submit"
               disabled={loading || !passwordValidation.isValid || password !== confirmPassword}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-blue-600/50 disabled:to-purple-600/50 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
             >
               {loading ? (
                 <>
@@ -206,13 +211,14 @@ function SignupPage() {
         </div>
 
         <div className="mt-8 text-center">
-          <Link to="/" className="text-gray-400 hover:text-gray-300 transition-colors duration-200">
-            ← Back to home
+          <Link to="/" className="inline-flex items-center text-gray-400 hover:text-gray-300 transition-colors duration-200">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to home
           </Link>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default SignupPage;
+export default SignupPage
