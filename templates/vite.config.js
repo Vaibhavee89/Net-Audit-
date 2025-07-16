@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '127.0.0.1', // Force IPv4 to avoid EACCES on ::1
+    port: 3000,         // Use a common available port
     proxy: {
       '/login': 'http://localhost:5000',
       '/signup': 'http://localhost:5000',
