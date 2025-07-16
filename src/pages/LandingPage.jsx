@@ -169,7 +169,7 @@ function LandingPage() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
               <Shield className="w-8 h-8 text-blue-400" />
-              <span className="text-xl font-bold text-white">NetworkAudit Pro</span>
+              <span className="text-xl font-bold text-white">Net-Audit</span>
             </div>
             <div className="flex space-x-4">
               <Link 
@@ -202,7 +202,6 @@ function LandingPage() {
             Network Security Audit
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed">
-            Comprehensive network security assessment platform with advanced Python integration. 
             From asset discovery to continuous monitoring - secure your infrastructure with enterprise-grade auditing.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -224,7 +223,7 @@ function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white/5 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Enterprise-Grade Network Auditing</h2>
+            <h2 className="text-4xl font-bold text-white mb-4">Enterprise-Level Network Auditing</h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Advanced security assessment tools designed for modern network infrastructure
             </p>
