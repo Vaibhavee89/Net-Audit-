@@ -35,7 +35,7 @@ function LoginPage() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 mb-6 group">
             <Shield className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform duration-200" />
-            <span className="text-2xl font-bold text-white">NetworkAudit Pro</span>
+            <span className="text-2xl font-bold text-white">Net-Audit</span>
           </Link>
           <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
           <p className="text-gray-300">Access your network security dashboard</p>
