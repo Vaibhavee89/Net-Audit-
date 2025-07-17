@@ -14,7 +14,13 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
   function signup(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+    return createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        return { success: true, user: userCredential.user };
+      })
+      .catch((error) => {
+        return { success: false, error: error.message };
+      });
   }
   useEffect(() => {
     const token = localStorage.getItem('networkaudit_token')
