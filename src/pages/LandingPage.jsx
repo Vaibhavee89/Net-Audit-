@@ -274,11 +274,11 @@ function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-            <h2 className="text-4xl font-bold text-white mb-6">Ready for Python Integration</h2>
-            <p className="text-xl text-gray-300 mb-8">
+            {/* <h2 className="text-4xl font-bold text-white mb-6">Ready for Python Integration</h2> */}
+            {/* <p className="text-xl text-gray-300 mb-8">
               Connect your existing security tools, 
               automation scripts, and monitoring systems for a complete security operations platform.
-            </p>
+            </p> */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 to="/signup" 
