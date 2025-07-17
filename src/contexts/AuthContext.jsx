@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData))
+        setCurrentUser(JSON.parse(userData))
       } catch (error) {
         localStorage.removeItem('networkaudit_token')
         localStorage.removeItem('networkaudit_user')
