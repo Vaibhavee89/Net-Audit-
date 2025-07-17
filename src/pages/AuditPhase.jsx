@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 import { 
   Shield, 
   ArrowLeft, 
@@ -23,7 +25,13 @@ import {
   Database,
   RefreshCw,
   Terminal,
-  Download
+  Download,
+  Edit3,
+  Save,
+  Plus,
+  Trash2,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react'
 
 function AuditPhase() {
@@ -32,6 +40,36 @@ function AuditPhase() {
   const [isRunning, setIsRunning] = useState(false)
   const [progress, setProgress] = useState(0)
   const [logs, setLogs] = useState([])
+  const [editingStep, setEditingStep] = useState(null)
+  const [expandedSections, setExpandedSections] = useState({})
+  const [phaseData, setPhaseData] = useState({
+    scopeComponents: [
+      { id: 1, name: 'LAN - Local Area Network', description: 'Corporate office network infrastructure', included: true },
+      { id: 2, name: 'WAN - Wide Area Network', description: 'Connections between office branches', included: true },
+      { id: 3, name: 'Wireless Networks', description: 'Wi-Fi access points and client devices', included: true },
+      { id: 4, name: 'VPN Infrastructure', description: 'Remote access tunnels and configurations', included: false },
+      { id: 5, name: 'Cloud Networks', description: 'Virtual networks in AWS, Azure, or GCP', included: false },
+      { id: 6, name: 'Firewall and DMZ', description: 'Perimeter defense and public-facing systems', included: true }
+    ],
+    objectives: [
+      { id: 1, name: 'Security Assessment', description: 'Detect vulnerabilities, misconfigurations, or unauthorized access', priority: 'High' },
+      { id: 2, name: 'Compliance Check - ISO 27001', description: 'Ensure adherence to ISO/IEC 27001 standards', priority: 'High' },
+      { id: 3, name: 'Performance Review', description: 'Analyze network efficiency, bandwidth usage, and latency', priority: 'Medium' },
+      { id: 4, name: 'Access Control Audit', description: 'Verify authorized user access only', priority: 'High' }
+    ],
+    stakeholders: [
+      { id: 1, name: 'IT Administrator', role: 'Network Management', contact: 'admin@company.com', concerns: 'Network performance and security' },
+      { id: 2, name: 'CISO', role: 'Security Oversight', contact: 'ciso@company.com', concerns: 'Compliance and risk management' }
+    ],
+    timeline: {
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      duration: '30 days'
+    },
+    complianceFrameworks: ['ISO/IEC 27001', 'NIST Cybersecurity Framework'],
+    businessCriticalSystems: ['Email Server', 'Database Server', 'Web Application'],
+    exclusions: ['Guest WiFi Network', 'Legacy Systems scheduled for decommission']
+  })
 
   const phaseDetails = {
     1: {
@@ -39,221 +77,196 @@ function AuditPhase() {
       description: "Identify what will be audited (LAN, WAN, Wi-Fi, VPN, cloud network) and set clear goals for security assessment, compliance check, and performance review.",
       icon: <Target className="w-8 h-8" />,
       color: "from-blue-500 to-cyan-500",
-      tasks: [
-        "Identify network segments to audit",
-        "Define security assessment goals",
-        "Set compliance requirements (ISO 27001, HIPAA, etc.)",
-        "Gather stakeholder requirements",
-        "Document audit scope boundaries"
-      ],
-      tools: ["Network Documentation", "Compliance Frameworks", "Stakeholder Interviews"],
-      pythonIntegration: "scope_definition.py - Automated scope documentation and requirement gathering"
-    },
-    2: {
-      title: "Inventory All Network Assets",
-      description: "Comprehensive listing of all hardware (routers, switches, firewalls, servers), software (OS, applications, firmware), and endpoints (desktops, laptops, mobile devices, IoT).",
-      icon: <Package className="w-8 h-8" />,
-      color: "from-purple-500 to-pink-500",
-      tasks: [
-        "Discover all network hardware",
-        "Document software and firmware versions",
-        "Catalog all endpoints and devices",
-        "Identify IoT and mobile devices",
-        "Create asset database"
-      ],
-      tools: ["Nmap", "Asset Discovery Tools", "SNMP Scanners"],
-      pythonIntegration: "asset_inventory.py - Automated asset discovery and cataloging"
-    },
-    3: {
-      title: "Map the Network Topology",
-      description: "Create detailed network diagrams showing logical and physical connections, identify subnetworks and data flows, and highlight external connections.",
-      icon: <Map className="w-8 h-8" />,
-      color: "from-green-500 to-emerald-500",
-      tasks: [
-        "Create logical network diagram",
-        "Map physical connections",
-        "Identify subnetworks and VLANs",
-        "Document data flow patterns",
-        "Highlight external connections"
-      ],
-      tools: ["Network Mapping Tools", "SNMP", "Traceroute"],
-      pythonIntegration: "topology_mapper.py - Automated network topology discovery and visualization"
-    },
-    4: {
-      title: "Review Network Security Policies",
-      description: "Audit firewall rules, access control lists (ACLs), VPN configurations, user roles, group policies, and multi-factor authentication enforcement.",
-      icon: <Settings className="w-8 h-8" />,
-      color: "from-orange-500 to-red-500",
-      tasks: [
-        "Review firewall rules and ACLs",
-        "Audit VPN configurations",
-        "Check user roles and permissions",
-        "Verify MFA enforcement",
-        "Assess password policies"
-      ],
-      tools: ["Firewall Analyzers", "Policy Auditors", "Access Control Tools"],
-      pythonIntegration: "policy_auditor.py - Automated policy compliance checking"
-    },
-    5: {
-      title: "Analyze Network Traffic",
-      description: "Monitor traffic patterns using Wireshark, tcpdump, and NetFlow analyzers to identify unusual spikes, unauthorized flows, bandwidth issues, and latency problems.",
-      icon: <Activity className="w-8 h-8" />,
-      color: "from-indigo-500 to-purple-500",
-      tasks: [
-        "Monitor traffic patterns",
-        "Identify unusual traffic spikes",
-        "Detect unauthorized data flows",
-        "Analyze bandwidth utilization",
-        "Measure latency and jitter"
-      ],
-      tools: ["Wireshark", "tcpdump", "NetFlow Analyzers"],
-      pythonIntegration: "traffic_analyzer.py - Real-time traffic analysis and anomaly detection"
-    },
-    6: {
-      title: "Scan for Vulnerabilities",
-      description: "Perform internal and external vulnerability scans using Nmap, Nessus, and OpenVAS to identify unpatched systems, open ports, weak protocols, and deprecated SSL/TLS versions.",
-      icon: <Search className="w-8 h-8" />,
-      color: "from-teal-500 to-cyan-500",
-      tasks: [
-        "Run internal vulnerability scans",
-        "Perform external security scans",
-        "Identify unpatched systems",
-        "Find unnecessary open ports",
-        "Check for weak protocols"
-      ],
-      tools: ["Nmap", "Nessus", "OpenVAS", "Vulnerability Scanners"],
-      pythonIntegration: "vulnerability_scanner.py - Automated vulnerability assessment and reporting"
-    },
-    7: {
-      title: "Test for Intrusions or Breaches",
-      description: "Conduct penetration testing on critical systems, review IDS/IPS logs for suspicious behavior, and check SIEM tools for alerts and anomalies.",
-      icon: <Bug className="w-8 h-8" />,
-      color: "from-red-500 to-pink-500",
-      tasks: [
-        "Conduct penetration testing",
-        "Review IDS/IPS logs",
-        "Analyze SIEM alerts",
-        "Check for indicators of compromise",
-        "Test incident response procedures"
-      ],
-      tools: ["Penetration Testing Tools", "IDS/IPS", "SIEM Systems"],
-      pythonIntegration: "intrusion_tester.py - Automated penetration testing and log analysis"
-    },
-    8: {
-      title: "Evaluate Network Performance and Reliability",
-      description: "Measure uptime/downtime, latency, packet loss, and throughput. Identify network bottlenecks and verify redundancy and failover systems.",
-      icon: <BarChart3 className="w-8 h-8" />,
-      color: "from-yellow-500 to-orange-500",
-      tasks: [
-        "Measure network uptime/downtime",
-        "Test latency and packet loss",
-        "Analyze throughput performance",
-        "Identify network bottlenecks",
-        "Verify failover systems"
-      ],
-      tools: ["Performance Monitors", "Bandwidth Analyzers", "Uptime Monitors"],
-      pythonIntegration: "performance_evaluator.py - Network performance monitoring and analysis"
-    },
-    9: {
-      title: "Audit Logging and Monitoring Mechanisms",
-      description: "Verify that event logs are enabled, centralized, and properly retained. Validate log integrity, access control, and alerting mechanisms.",
-      icon: <Monitor className="w-8 h-8" />,
-      color: "from-blue-500 to-indigo-500",
-      tasks: [
-        "Verify log collection is enabled",
-        "Check log centralization",
-        "Validate log retention policies",
-        "Test log integrity",
-        "Review alerting mechanisms"
-      ],
-      tools: ["Log Management Systems", "SIEM", "Syslog Servers"],
-      pythonIntegration: "log_auditor.py - Automated log analysis and compliance checking"
-    },
-    10: {
-      title: "Check Compliance and Documentation",
-      description: "Match configurations against compliance standards (NIST, ISO 27001, PCI-DSS) and verify documentation for change management, policies, and incident response.",
-      icon: <FileText className="w-8 h-8" />,
-      color: "from-green-500 to-teal-500",
-      tasks: [
-        "Check NIST compliance",
-        "Verify ISO 27001 requirements",
-        "Audit PCI-DSS compliance",
-        "Review change management docs",
-        "Validate incident response plans"
-      ],
-      tools: ["Compliance Scanners", "Documentation Tools", "Audit Frameworks"],
-      pythonIntegration: "compliance_checker.py - Automated compliance assessment and reporting"
-    },
-    11: {
-      title: "Interview Staff and Verify Access",
-      description: "Interview network administrators for undocumented changes, verify access logs against employee roles, and check for unauthorized users or ex-employees with active credentials.",
-      icon: <UserCheck className="w-8 h-8" />,
-      color: "from-purple-500 to-indigo-500",
-      tasks: [
-        "Interview network administrators",
-        "Verify user access logs",
-        "Check employee role alignment",
-        "Identify unauthorized users",
-        "Review ex-employee access"
-      ],
-      tools: ["Access Management Systems", "HR Systems", "Interview Templates"],
-      pythonIntegration: "access_verifier.py - Automated access review and user validation"
-    },
-    12: {
-      title: "Identify Risks and Recommend Improvements",
-      description: "Rank vulnerabilities by risk using CVSS scores and exploitability. Suggest improvements like network segmentation, MFA implementation, and firewall optimization.",
-      icon: <TrendingUp className="w-8 h-8" />,
-      color: "from-orange-500 to-yellow-500",
-      tasks: [
-        "Calculate CVSS risk scores",
-        "Rank vulnerabilities by impact",
-        "Recommend network segmentation",
-        "Suggest MFA implementation",
-        "Optimize firewall rules"
-      ],
-      tools: ["Risk Assessment Tools", "CVSS Calculators", "Security Frameworks"],
-      pythonIntegration: "risk_assessor.py - Automated risk calculation and recommendation engine"
-    },
-    13: {
-      title: "Generate Audit Report",
-      description: "Document audit objectives, methodologies used, vulnerabilities found, risk levels, and actionable recommendations. Share with stakeholders and set follow-up dates.",
-      icon: <Database className="w-8 h-8" />,
-      color: "from-cyan-500 to-blue-500",
-      tasks: [
-        "Document audit objectives",
-        "Summarize methodologies used",
-        "List vulnerabilities found",
-        "Assign risk levels",
-        "Provide actionable recommendations"
-      ],
-      tools: ["Report Generators", "Documentation Tools", "Presentation Software"],
-      pythonIntegration: "report_generator.py - Automated comprehensive audit report generation"
-    },
-    14: {
-      title: "Plan for Continuous Monitoring",
-      description: "Recommend ongoing monitoring tools (Zabbix, Nagios, SolarWinds), set periodic audit intervals, and enable automated alerts and regular vulnerability scans.",
-      icon: <RefreshCw className="w-8 h-8" />,
-      color: "from-pink-500 to-purple-500",
-      tasks: [
-        "Setup continuous monitoring tools",
-        "Configure automated alerts",
-        "Schedule periodic audits",
-        "Enable vulnerability scanning",
-        "Implement change tracking"
-      ],
-      tools: ["Zabbix", "Nagios", "SolarWinds", "Monitoring Platforms"],
-      pythonIntegration: "continuous_monitor.py - Automated monitoring setup and maintenance"
+      sections: [
+        {
+          id: 'scope',
+          title: '🧭 1.1 Identify What Will Be Audited',
+          description: 'Define specific network components and segments to be included in the audit.',
+          content: 'scopeComponents'
+        },
+        {
+          id: 'objectives',
+          title: '🎯 1.2 Set Clear Audit Objectives',
+          description: 'Define SMART objectives for the audit process.',
+          content: 'objectives'
+        },
+        {
+          id: 'stakeholders',
+          title: '🧑‍💼 1.3 Gather Stakeholder Requirements',
+          description: 'Identify and document stakeholder expectations and concerns.',
+          content: 'stakeholders'
+        },
+        {
+          id: 'deliverables',
+          title: '🗺️ Deliverables of This Step',
+          description: 'Final outputs and documentation from this phase.',
+          content: 'deliverables'
+        }
+      ]
     }
+    // Other phases would be defined here...
   }
 
   const currentPhase = phaseDetails[phaseId] || phaseDetails[1]
+
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }))
+  }
+
+  const addItem = (type) => {
+    const newItem = {
+      id: Date.now(),
+      name: '',
+      description: '',
+      ...(type === 'scopeComponents' && { included: true }),
+      ...(type === 'objectives' && { priority: 'Medium' }),
+      ...(type === 'stakeholders' && { role: '', contact: '', concerns: '' })
+    }
+    
+    setPhaseData(prev => ({
+      ...prev,
+      [type]: [...prev[type], newItem]
+    }))
+    setEditingStep(`${type}-${newItem.id}`)
+  }
+
+  const updateItem = (type, id, field, value) => {
+    setPhaseData(prev => ({
+      ...prev,
+      [type]: prev[type].map(item => 
+        item.id === id ? { ...item, [field]: value } : item
+      )
+    }))
+  }
+
+  const removeItem = (type, id) => {
+    setPhaseData(prev => ({
+      ...prev,
+      [type]: prev[type].filter(item => item.id !== id)
+    }))
+  }
+
+  const generatePDF = async () => {
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+    let yPosition = 20
+
+    // Title
+    pdf.setFontSize(20)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text(`Phase ${phaseId}: ${currentPhase.title}`, 20, yPosition)
+    yPosition += 15
+
+    // Description
+    pdf.setFontSize(12)
+    pdf.setFont('helvetica', 'normal')
+    const splitDescription = pdf.splitTextToSize(currentPhase.description, pageWidth - 40)
+    pdf.text(splitDescription, 20, yPosition)
+    yPosition += splitDescription.length * 5 + 10
+
+    // Scope Components
+    pdf.setFontSize(16)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('1.1 Network Components in Scope', 20, yPosition)
+    yPosition += 10
+
+    pdf.setFontSize(10)
+    pdf.setFont('helvetica', 'normal')
+    phaseData.scopeComponents.forEach(component => {
+      if (yPosition > pageHeight - 30) {
+        pdf.addPage()
+        yPosition = 20
+      }
+      const status = component.included ? '✓ Included' : '✗ Excluded'
+      pdf.text(`${status}: ${component.name}`, 25, yPosition)
+      yPosition += 5
+      if (component.description) {
+        const splitDesc = pdf.splitTextToSize(`   ${component.description}`, pageWidth - 50)
+        pdf.text(splitDesc, 25, yPosition)
+        yPosition += splitDesc.length * 4 + 3
+      }
+    })
+
+    yPosition += 10
+
+    // Objectives
+    pdf.setFontSize(16)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('1.2 Audit Objectives', 20, yPosition)
+    yPosition += 10
+
+    pdf.setFontSize(10)
+    pdf.setFont('helvetica', 'normal')
+    phaseData.objectives.forEach(objective => {
+      if (yPosition > pageHeight - 30) {
+        pdf.addPage()
+        yPosition = 20
+      }
+      pdf.text(`• ${objective.name} (Priority: ${objective.priority})`, 25, yPosition)
+      yPosition += 5
+      if (objective.description) {
+        const splitDesc = pdf.splitTextToSize(`   ${objective.description}`, pageWidth - 50)
+        pdf.text(splitDesc, 25, yPosition)
+        yPosition += splitDesc.length * 4 + 3
+      }
+    })
+
+    yPosition += 10
+
+    // Stakeholders
+    pdf.setFontSize(16)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('1.3 Stakeholders', 20, yPosition)
+    yPosition += 10
+
+    pdf.setFontSize(10)
+    pdf.setFont('helvetica', 'normal')
+    phaseData.stakeholders.forEach(stakeholder => {
+      if (yPosition > pageHeight - 30) {
+        pdf.addPage()
+        yPosition = 20
+      }
+      pdf.text(`• ${stakeholder.name} - ${stakeholder.role}`, 25, yPosition)
+      yPosition += 5
+      if (stakeholder.contact) {
+        pdf.text(`   Contact: ${stakeholder.contact}`, 25, yPosition)
+        yPosition += 4
+      }
+      if (stakeholder.concerns) {
+        const splitConcerns = pdf.splitTextToSize(`   Concerns: ${stakeholder.concerns}`, pageWidth - 50)
+        pdf.text(splitConcerns, 25, yPosition)
+        yPosition += splitConcerns.length * 4 + 3
+      }
+    })
+
+    // Timeline
+    yPosition += 10
+    pdf.setFontSize(16)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text('Timeline', 20, yPosition)
+    yPosition += 10
+
+    pdf.setFontSize(10)
+    pdf.setFont('helvetica', 'normal')
+    pdf.text(`Start Date: ${phaseData.timeline.startDate}`, 25, yPosition)
+    yPosition += 5
+    pdf.text(`End Date: ${phaseData.timeline.endDate}`, 25, yPosition)
+    yPosition += 5
+    pdf.text(`Duration: ${phaseData.timeline.duration}`, 25, yPosition)
+
+    // Save the PDF
+    pdf.save(`Phase_${phaseId}_Audit_Scope_Definition.pdf`)
+  }
 
   const startPhase = () => {
     setIsRunning(true)
     setProgress(0)
     setLogs([])
     
-    // Simulate phase execution
     const interval = setInterval(() => {
       setProgress(prev => {
         const newProgress = prev + Math.random() * 10
@@ -264,14 +277,13 @@ function AuditPhase() {
           return 100
         }
         
-        // Add random log entries
         if (Math.random() > 0.7) {
           const messages = [
-            'Scanning network segment...',
-            'Analyzing configuration files...',
-            'Checking security policies...',
-            'Validating compliance requirements...',
-            'Processing discovered assets...'
+            'Validating scope definitions...',
+            'Checking stakeholder requirements...',
+            'Reviewing compliance frameworks...',
+            'Documenting audit objectives...',
+            'Finalizing scope boundaries...'
           ]
           setLogs(prev => [...prev, { 
             type: 'info', 
@@ -287,6 +299,261 @@ function AuditPhase() {
 
   const pausePhase = () => {
     setIsRunning(false)
+  }
+
+  const renderScopeComponents = () => (
+    <div className="space-y-4">
+      {phaseData.scopeComponents.map(component => (
+        <div key={component.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={component.included}
+                onChange={(e) => updateItem('scopeComponents', component.id, 'included', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              />
+              {editingStep === `scopeComponents-${component.id}` ? (
+                <input
+                  type="text"
+                  value={component.name}
+                  onChange={(e) => updateItem('scopeComponents', component.id, 'name', e.target.value)}
+                  className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                  autoFocus
+                />
+              ) : (
+                <span className={`font-medium ${component.included ? 'text-green-400' : 'text-gray-400'}`}>
+                  {component.name}
+                </span>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setEditingStep(editingStep === `scopeComponents-${component.id}` ? null : `scopeComponents-${component.id}`)}
+                className="text-blue-400 hover:text-blue-300"
+              >
+                {editingStep === `scopeComponents-${component.id}` ? <Save className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => removeItem('scopeComponents', component.id)}
+                className="text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {editingStep === `scopeComponents-${component.id}` ? (
+            <textarea
+              value={component.description}
+              onChange={(e) => updateItem('scopeComponents', component.id, 'description', e.target.value)}
+              className="w-full bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+              rows="2"
+              placeholder="Description..."
+            />
+          ) : (
+            <p className="text-gray-300 text-sm">{component.description}</p>
+          )}
+        </div>
+      ))}
+      <button
+        onClick={() => addItem('scopeComponents')}
+        className="w-full p-3 border-2 border-dashed border-white/30 rounded-lg text-white hover:border-white/50 transition-colors duration-200 flex items-center justify-center space-x-2"
+      >
+        <Plus className="w-4 h-4" />
+        <span>Add Network Component</span>
+      </button>
+    </div>
+  )
+
+  const renderObjectives = () => (
+    <div className="space-y-4">
+      {phaseData.objectives.map(objective => (
+        <div key={objective.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3 flex-1">
+              {editingStep === `objectives-${objective.id}` ? (
+                <input
+                  type="text"
+                  value={objective.name}
+                  onChange={(e) => updateItem('objectives', objective.id, 'name', e.target.value)}
+                  className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm flex-1"
+                  autoFocus
+                />
+              ) : (
+                <span className="font-medium text-white">{objective.name}</span>
+              )}
+              <select
+                value={objective.priority}
+                onChange={(e) => updateItem('objectives', objective.id, 'priority', e.target.value)}
+                className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setEditingStep(editingStep === `objectives-${objective.id}` ? null : `objectives-${objective.id}`)}
+                className="text-blue-400 hover:text-blue-300"
+              >
+                {editingStep === `objectives-${objective.id}` ? <Save className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => removeItem('objectives', objective.id)}
+                className="text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {editingStep === `objectives-${objective.id}` ? (
+            <textarea
+              value={objective.description}
+              onChange={(e) => updateItem('objectives', objective.id, 'description', e.target.value)}
+              className="w-full bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+              rows="2"
+              placeholder="Description..."
+            />
+          ) : (
+            <p className="text-gray-300 text-sm">{objective.description}</p>
+          )}
+        </div>
+      ))}
+      <button
+        onClick={() => addItem('objectives')}
+        className="w-full p-3 border-2 border-dashed border-white/30 rounded-lg text-white hover:border-white/50 transition-colors duration-200 flex items-center justify-center space-x-2"
+      >
+        <Plus className="w-4 h-4" />
+        <span>Add Objective</span>
+      </button>
+    </div>
+  )
+
+  const renderStakeholders = () => (
+    <div className="space-y-4">
+      {phaseData.stakeholders.map(stakeholder => (
+        <div key={stakeholder.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3 flex-1">
+              {editingStep === `stakeholders-${stakeholder.id}` ? (
+                <div className="grid grid-cols-2 gap-2 flex-1">
+                  <input
+                    type="text"
+                    value={stakeholder.name}
+                    onChange={(e) => updateItem('stakeholders', stakeholder.id, 'name', e.target.value)}
+                    className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                    placeholder="Name"
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    value={stakeholder.role}
+                    onChange={(e) => updateItem('stakeholders', stakeholder.id, 'role', e.target.value)}
+                    className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                    placeholder="Role"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <span className="font-medium text-white">{stakeholder.name}</span>
+                  <span className="text-gray-400 ml-2">- {stakeholder.role}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setEditingStep(editingStep === `stakeholders-${stakeholder.id}` ? null : `stakeholders-${stakeholder.id}`)}
+                className="text-blue-400 hover:text-blue-300"
+              >
+                {editingStep === `stakeholders-${stakeholder.id}` ? <Save className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => removeItem('stakeholders', stakeholder.id)}
+                className="text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {editingStep === `stakeholders-${stakeholder.id}` ? (
+            <div className="space-y-2">
+              <input
+                type="email"
+                value={stakeholder.contact}
+                onChange={(e) => updateItem('stakeholders', stakeholder.id, 'contact', e.target.value)}
+                className="w-full bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                placeholder="Contact email"
+              />
+              <textarea
+                value={stakeholder.concerns}
+                onChange={(e) => updateItem('stakeholders', stakeholder.id, 'concerns', e.target.value)}
+                className="w-full bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                rows="2"
+                placeholder="Concerns and expectations..."
+              />
+            </div>
+          ) : (
+            <div className="text-gray-300 text-sm">
+              {stakeholder.contact && <p>Contact: {stakeholder.contact}</p>}
+              {stakeholder.concerns && <p>Concerns: {stakeholder.concerns}</p>}
+            </div>
+          )}
+        </div>
+      ))}
+      <button
+        onClick={() => addItem('stakeholders')}
+        className="w-full p-3 border-2 border-dashed border-white/30 rounded-lg text-white hover:border-white/50 transition-colors duration-200 flex items-center justify-center space-x-2"
+      >
+        <Plus className="w-4 h-4" />
+        <span>Add Stakeholder</span>
+      </button>
+    </div>
+  )
+
+  const renderDeliverables = () => (
+    <div className="space-y-4">
+      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+        <h4 className="font-medium text-white mb-2">Written Scope Document</h4>
+        <ul className="text-gray-300 text-sm space-y-1 ml-4">
+          <li>• Network components included and excluded</li>
+          <li>• Timeline: {phaseData.timeline.startDate} to {phaseData.timeline.endDate}</li>
+          <li>• Tools and methodologies to be used</li>
+          <li>• Roles and responsibilities</li>
+        </ul>
+      </div>
+      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+        <h4 className="font-medium text-white mb-2">Objectives and Compliance</h4>
+        <ul className="text-gray-300 text-sm space-y-1 ml-4">
+          <li>• {phaseData.objectives.length} defined objectives</li>
+          <li>• Compliance frameworks: {phaseData.complianceFrameworks.join(', ')}</li>
+          <li>• Business-critical systems identified</li>
+        </ul>
+      </div>
+      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+        <h4 className="font-medium text-white mb-2">Communication Plan</h4>
+        <ul className="text-gray-300 text-sm space-y-1 ml-4">
+          <li>• {phaseData.stakeholders.length} stakeholders identified</li>
+          <li>• Regular progress updates scheduled</li>
+          <li>• Escalation procedures defined</li>
+        </ul>
+      </div>
+    </div>
+  )
+
+  const renderSectionContent = (contentType) => {
+    switch (contentType) {
+      case 'scopeComponents':
+        return renderScopeComponents()
+      case 'objectives':
+        return renderObjectives()
+      case 'stakeholders':
+        return renderStakeholders()
+      case 'deliverables':
+        return renderDeliverables()
+      default:
+        return <div>Content not available</div>
+    }
   }
 
   return (
@@ -358,9 +625,12 @@ function AuditPhase() {
                 <span>Pause Phase</span>
               </button>
             )}
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center space-x-2">
+            <button 
+              onClick={generatePDF}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 flex items-center space-x-2"
+            >
               <Download className="w-5 h-5" />
-              <span>Export Results</span>
+              <span>Download PDF</span>
             </button>
           </div>
         </div>
@@ -368,18 +638,29 @@ function AuditPhase() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Phase Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Tasks */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-4">Phase Tasks</h2>
-              <div className="space-y-3">
-                {currentPhase.tasks.map((task, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                    <span className="text-white">{task}</span>
+            {/* Interactive Sections */}
+            {currentPhase.sections && currentPhase.sections.map(section => (
+              <div key={section.id} className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
+                <button
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full p-6 text-left flex items-center justify-between hover:bg-white/5 transition-colors duration-200"
+                >
+                  <div>
+                    <h2 className="text-xl font-bold text-white mb-2">{section.title}</h2>
+                    <p className="text-gray-300">{section.description}</p>
                   </div>
-                ))}
+                  {expandedSections[section.id] ? 
+                    <ChevronDown className="w-5 h-5 text-gray-400" /> : 
+                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                  }
+                </button>
+                {expandedSections[section.id] && (
+                  <div className="px-6 pb-6">
+                    {renderSectionContent(section.content)}
+                  </div>
+                )}
               </div>
-            </div>
+            ))}
 
             {/* Execution Logs */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
@@ -410,27 +691,35 @@ function AuditPhase() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Tools Required */}
+            {/* Timeline */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-4">Required Tools</h2>
-              <div className="space-y-2">
-                {currentPhase.tools.map((tool, index) => (
-                  <div key={index} className="p-2 bg-white/5 rounded-lg border border-white/10">
-                    <span className="text-white text-sm">{tool}</span>
-                  </div>
-                ))}
+              <h2 className="text-xl font-bold text-white mb-4">Timeline</h2>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={phaseData.timeline.startDate}
+                    onChange={(e) => setPhaseData(prev => ({
+                      ...prev,
+                      timeline: { ...prev.timeline, startDate: e.target.value }
+                    }))}
+                    className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={phaseData.timeline.endDate}
+                    onChange={(e) => setPhaseData(prev => ({
+                      ...prev,
+                      timeline: { ...prev.timeline, endDate: e.target.value }
+                    }))}
+                    className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-white"
+                  />
+                </div>
               </div>
-            </div>
-
-            {/* Python Integration */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-4">Python Integration</h2>
-              <div className="p-4 bg-black/30 rounded-lg border border-white/10">
-                <code className="text-green-400 text-sm">{currentPhase.pythonIntegration}</code>
-              </div>
-              <button className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors duration-200">
-                View Python Script
-              </button>
             </div>
 
             {/* Phase Status */}
@@ -448,12 +737,16 @@ function AuditPhase() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Duration</span>
-                  <span className="text-white">~30 minutes</span>
+                  <span className="text-gray-300">Components</span>
+                  <span className="text-white">{phaseData.scopeComponents.filter(c => c.included).length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Priority</span>
-                  <span className="text-yellow-400">High</span>
+                  <span className="text-gray-300">Objectives</span>
+                  <span className="text-white">{phaseData.objectives.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">Stakeholders</span>
+                  <span className="text-white">{phaseData.stakeholders.length}</span>
                 </div>
               </div>
             </div>
