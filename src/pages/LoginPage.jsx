@@ -17,14 +17,13 @@ function LoginPage() {
     setError('')
     setLoading(true)
 
-    const result = await login(email, password)
-    
-    if (result.success) {
+    try {
+      await login(email, password)
       navigate('/dashboard')
-    } else {
-      setError(result.error || 'Login failed. Please check your credentials.')
+    } catch (error) {
+      setError('Failed to log in: ' + error.message)
     }
-    
+
     setLoading(false)
   }
 

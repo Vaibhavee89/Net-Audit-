@@ -1,8 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import axios from 'axios'
-
+import { createContext, useContext, useEffect, useState } from 'react';
+import { auth } from '../firebase';
 const AuthContext = createContext()
-
 export function useAuth() {
   return useContext(AuthContext)
 }
@@ -10,11 +8,12 @@ export function useAuth() {
 // Configure axios defaults for Python Flask integration
 axios.defaults.baseURL = '/api'
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
+  const [currentUser, setCurrentUser] = useState();
+  const [loading, setLoading] = useState(true);
+  function signup(email, password) {
+ return auth.createUserWithEmailAndPassword(email, password);
+  }
   useEffect(() => {
     const token = localStorage.getItem('networkaudit_token')
     const userData = localStorage.getItem('networkaudit_user')
@@ -28,73 +27,45 @@ export function AuthProvider({ children }) {
       }
     }
     setLoading(false)
-  }, [])
-
-  const login = async (email, password) => {
-    try {
-      const formData = new URLSearchParams()
-      formData.append('email', email)
-      formData.append('password', password)
-
-      const response = await axios.post('/login', formData)
-      
-      if (response.status === 200) {
-        const userData = { email, token: 'authenticated' }
-        setUser(userData)
-        localStorage.setItem('networkaudit_token', 'authenticated')
-        localStorage.setItem('networkaudit_user', JSON.stringify(userData))
-        return { success: true }
-      }
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data || 'Login failed. Please check your credentials.' 
-      }
-    }
+  }, []);
+  function login(email, password) {
+ return auth.signInWithEmailAndPassword(email, password);
   }
-
-  const signup = async (email, password) => {
-    try {
-      const formData = new URLSearchParams()
-      formData.append('email', email)
-      formData.append('password', password)
-
-      const response = await axios.post('/signup', formData)
-      
-      if (response.status === 200) {
-        return { success: true }
-      }
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data || 'Signup failed. Please try again.' 
-      }
-    }
+  function logout() {
+ return auth.signOut();
   }
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setCurrentUser(user);
+      setLoading(false);
+    });
+    return unsubscribe;
+  });
+  
+    
 
-  const logout = async () => {
-    try {
-      await axios.get('/logout')
-    } catch (error) {
-      console.log('Logout error:', error)
-    } finally {
-      setUser(null)
-      localStorage.removeItem('networkaudit_token')
-      localStorage.removeItem('networkaudit_user')
-    }
-  }
+//   const logout = async () => {
+//     try {
+//       await axios.get('/logout')
+//     } catch (error) {
+//       console.log('Logout error:', error)
+//     } finally {
+//       setUser(null)
+//       localStorage.removeItem('networkaudit_token')
+//       localStorage.removeItem('networkaudit_user')
+//     }
+//   }
 
-  const value = {
-    user,
-    login,
-    signup,
-    logout,
-    loading
-  }
+//   const value = {
+//     currentUser,
+//     login,
+//     signup,
+//  logout
+//   }
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+ {!loading && children}
     </AuthContext.Provider>
   )
 }
