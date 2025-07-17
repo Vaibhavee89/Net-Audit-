@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../firebase';
+import axios from 'axios';
 const AuthContext = createContext()
 export function useAuth() {
   return useContext(AuthContext)
