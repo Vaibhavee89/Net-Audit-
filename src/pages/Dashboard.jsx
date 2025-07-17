@@ -29,7 +29,7 @@ import {
 } from 'lucide-react'
 
 function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user: currentUser, logout } = useAuth()
   const [activePhase, setActivePhase] = useState(1)
 
   const auditPhases = [
@@ -107,7 +107,7 @@ function Dashboard() {
             <div className="flex items-center space-x-6">
               <div className="text-right">
                 <p className="text-sm text-gray-300">Welcome back,</p>
-                <p className="text-white font-medium">{user?.email}</p>
+                <p className="text-white font-medium">{currentUser?.email}</p>
               </div>
               <button
                 onClick={logout}
