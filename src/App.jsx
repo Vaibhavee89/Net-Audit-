@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard'
 import AuditPhase from './pages/AuditPhase'
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth()
+  const { user: currentUser, loading } = useAuth()
   
   if (loading) {
     return (
@@ -18,7 +18,7 @@ function ProtectedRoute({ children }) {
     )
   }
   
-  return user ? children : <Navigate to="/login" />
+  return currentUser ? children : <Navigate to="/login" />
 }
 
 function App() {
